@@ -14,7 +14,9 @@ class FLOCKAI_API UFlockAIMoveToComponent : public UActorComponent
 	AActor* Owner;
 	int roatationspeed = 1;
 	float keepdistance;
-	float maxspeed = 5;
+	float movespeed=1;
+	FVector ownerbound;
+	FVector aileaderbound;
 public:	
 	// Sets default values for this component's properties
 	UFlockAIMoveToComponent();

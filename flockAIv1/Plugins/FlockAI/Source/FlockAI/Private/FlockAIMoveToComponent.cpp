@@ -4,6 +4,8 @@
 #include "FlockAIMoveToComponent.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Engine.h"
 // Sets default values for this component's properties
 UFlockAIMoveToComponent::UFlockAIMoveToComponent()
 {
@@ -22,11 +24,11 @@ void UFlockAIMoveToComponent::BeginPlay()
 	Owner = GetOwner();
 	// ...
 	roatationspeed = 5;
-	FVector origin, bound;
-	Owner->GetActorBounds(false, origin,bound);
-	FVector origin1, bound1;
-	AILeader->GetActorBounds(false, origin1, bound1);
-	keepdistance = bound.Size() + bound1.Size();
+	FVector origin;
+	Owner->GetActorBounds(false, origin, ownerbound);
+	FVector origin1;
+	AILeader->GetActorBounds(false, origin1, aileaderbound);
+	keepdistance = ownerbound.Size() + aileaderbound.Size();
 }
 
 
@@ -47,13 +49,118 @@ void UFlockAIMoveToComponent::TickComponent(float DeltaTime, ELevelTick TickType
 				true
 			)
 		);
-		float dis = FVector::Dist(Owner->GetActorLocation(), AILeader->GetActorLocation());
-		float speedmove = (dis - keepdistance)> maxspeed ? maxspeed : (dis - keepdistance);
-		Owner->AddActorWorldOffset(
-			Owner->GetActorForwardVector()*
-			speedmove
-		);
-		
+		if (FVector::Dist(Owner->GetActorLocation(), AILeader->GetActorLocation()) > keepdistance)
+		{
+			Owner->SetActorLocation(UKismetMathLibrary::VLerp(Owner->GetActorLocation(), AILeader->GetActorLocation(), 0.001* movespeed));
+		}
+
+		///// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//TArray<TEnumAsByte<EObjectTypeQuery>>otq;
+		////otq.Add(EObjectTypeQuery::ObjectTypeQuery2);
+		//otq.Add(EObjectTypeQuery::ObjectTypeQuery1);
+		//TArray<AActor*> actortoignore;
+		//actortoignore.Add(Owner);
+		//TArray<AActor*>outactors;
+		//UKismetSystemLibrary::SphereOverlapActors(this, Owner->GetActorLocation(), ownerbound.Size() *3, otq,AActor::StaticClass(), actortoignore, outactors);
+		//GEngine->AddOnScreenDebugMessage(-1, .7f, FColor::Red, FString::FromInt(outactors.Num()));
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		///forward
+		{
+#define FORWARDDIS 1.5
+			FVector starpoint = Owner->GetActorLocation();
+			FVector director = Owner->GetActorForwardVector();
+			FVector endpoint = starpoint + (ownerbound.X * FORWARDDIS * director);
+			FVector HalfSize = FVector(5, ownerbound.Y, ownerbound.Z);
+			TArray<AActor*> actorarray;
+			FHitResult hitresult;
+			bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, director.Rotation(),
+				ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
+				EDrawDebugTrace::Type::ForOneFrame, hitresult, true,
+				FLinearColor::Red, FLinearColor::Green, 5.0f);
+			if (b)
+			{
+				//distance = hitresult.Distance;
+				//hitpoint = hitresult.ImpactPoint;
+				//FName name = hitresult.Actor->GetFName();
+				////GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, name.ToString());
+				//////GEngine->AddOnScreenDebugMessage(-1, 35.0f, FColor::Yellow, FString::FromInt(distance).Append(" distance"));
+				//bhitbackground = name.IsEqual("background");
+			}
+
+		}
+
+/////////////////////////////////////////////////////////////////////////////
+		////////////////right
+		{
+#define RIGHTDIS 3
+
+			FVector starpoint = Owner->GetActorLocation();
+			FVector director = Owner->GetActorRightVector();
+			FVector endpoint = starpoint + (ownerbound.Y * RIGHTDIS * director);
+			FVector HalfSize = FVector(ownerbound.X, 5, ownerbound.Z);
+			TArray<AActor*> actorarray;
+			FHitResult hitresult;
+			bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, Owner->GetActorForwardVector().Rotation(),
+				ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
+				EDrawDebugTrace::Type::ForOneFrame, hitresult, true,
+				FLinearColor::Red, FLinearColor::Green, 5.0f);
+			if (b)
+			{
+				//distance = hitresult.Distance;
+				//hitpoint = hitresult.ImpactPoint;
+				//FName name = hitresult.Actor->GetFName();
+				////GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, name.ToString());
+				//////GEngine->AddOnScreenDebugMessage(-1, 35.0f, FColor::Yellow, FString::FromInt(distance).Append(" distance"));
+				//bhitbackground = name.IsEqual("background");
+			}
+		}
+//////////////////////////////////////////////////////////////////////////////
+		///////////left
+		//{
+		//	FVector starpoint = Owner->GetActorLocation();
+		//	FVector director = -Owner->GetActorRightVector();
+		//	FVector endpoint = starpoint + (ownerbound.Y * 1.5 * director);
+		//	FVector HalfSize = FVector(ownerbound.X, 5, ownerbound.Z);
+		//	TArray<AActor*> actorarray;
+		//	FHitResult hitresult;
+		//	bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, Owner->GetActorForwardVector().Rotation(),
+		//		ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
+		//		EDrawDebugTrace::Type::ForOneFrame, hitresult, true,
+		//		FLinearColor::Red, FLinearColor::Green, 5.0f);
+		//	if (b)
+		//	{
+		//		//distance = hitresult.Distance;
+		//		//hitpoint = hitresult.ImpactPoint;
+		//		//FName name = hitresult.Actor->GetFName();
+		//		////GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, name.ToString());
+		//		//////GEngine->AddOnScreenDebugMessage(-1, 35.0f, FColor::Yellow, FString::FromInt(distance).Append(" distance"));
+		//		//bhitbackground = name.IsEqual("background");
+		//	}
+		//}
+		//////////////////////////////////////////////////////////////////////////////
+		///////////up
+		{
+#define UPDIS 3
+			FVector starpoint = Owner->GetActorLocation();
+			FVector director = Owner->GetActorUpVector();
+			FVector endpoint = starpoint + (ownerbound.Y * UPDIS * director);
+			FVector HalfSize = FVector(ownerbound.X, ownerbound.Y, 5);
+			TArray<AActor*> actorarray;
+			FHitResult hitresult;
+			bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, Owner->GetActorForwardVector().Rotation(),
+				ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
+				EDrawDebugTrace::Type::ForOneFrame, hitresult, true,
+				FLinearColor::Red, FLinearColor::Green, 5.0f);
+			if (b)
+			{
+				//distance = hitresult.Distance;
+				//hitpoint = hitresult.ImpactPoint;
+				//FName name = hitresult.Actor->GetFName();
+				////GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, name.ToString());
+				//////GEngine->AddOnScreenDebugMessage(-1, 35.0f, FColor::Yellow, FString::FromInt(distance).Append(" distance"));
+				//bhitbackground = name.IsEqual("background");
+			}
+		}
 	}
 	// ...
 }
