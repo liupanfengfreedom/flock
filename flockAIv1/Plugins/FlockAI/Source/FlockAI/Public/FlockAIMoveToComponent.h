@@ -17,6 +17,8 @@ class FLOCKAI_API UFlockAIMoveToComponent : public UActorComponent
 	float movespeed=1;
 	FVector ownerbound;
 	FVector aileaderbound;
+	float turnspeed=1;
+	bool isturning = false;
 public:	
 	// Sets default values for this component's properties
 	UFlockAIMoveToComponent();

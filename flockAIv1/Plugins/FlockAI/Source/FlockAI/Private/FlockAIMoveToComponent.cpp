@@ -49,9 +49,12 @@ void UFlockAIMoveToComponent::TickComponent(float DeltaTime, ELevelTick TickType
 				true
 			)
 		);
-		if (FVector::Dist(Owner->GetActorLocation(), AILeader->GetActorLocation()) > keepdistance)
+		if (!isturning)
 		{
-			Owner->SetActorLocation(UKismetMathLibrary::VLerp(Owner->GetActorLocation(), AILeader->GetActorLocation(), 0.001* movespeed));
+			if (FVector::Dist(Owner->GetActorLocation(), AILeader->GetActorLocation()) > keepdistance)
+			{
+				Owner->SetActorLocation(UKismetMathLibrary::VLerp(Owner->GetActorLocation(), AILeader->GetActorLocation(), 0.001 * movespeed));
+			}
 		}
 
 		///// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,16 +78,25 @@ void UFlockAIMoveToComponent::TickComponent(float DeltaTime, ELevelTick TickType
 			FHitResult hitresult;
 			bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, director.Rotation(),
 				ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
-				EDrawDebugTrace::Type::ForOneFrame, hitresult, true,
+				EDrawDebugTrace::Type::None, hitresult, true,
 				FLinearColor::Red, FLinearColor::Green, 5.0f);
 			if (b)
 			{
-				//distance = hitresult.Distance;
-				//hitpoint = hitresult.ImpactPoint;
-				//FName name = hitresult.Actor->GetFName();
-				////GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, name.ToString());
-				//////GEngine->AddOnScreenDebugMessage(-1, 35.0f, FColor::Yellow, FString::FromInt(distance).Append(" distance"));
-				//bhitbackground = name.IsEqual("background");
+				auto ft = hitresult.Actor->GetComponentByClass(UFlockAIMoveToComponent::StaticClass());
+				if (ft)
+				{
+					Owner->AddActorWorldOffset(FMath::VRand() * turnspeed);
+					isturning = true;
+					//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString("ssssssssssss"));
+				}
+				else
+				{
+					isturning = false;
+				}
+			}
+			else
+			{
+				isturning = false;
 			}
 
 		}
@@ -102,16 +114,25 @@ void UFlockAIMoveToComponent::TickComponent(float DeltaTime, ELevelTick TickType
 			FHitResult hitresult;
 			bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, Owner->GetActorForwardVector().Rotation(),
 				ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
-				EDrawDebugTrace::Type::ForOneFrame, hitresult, true,
+				EDrawDebugTrace::Type::None, hitresult, true,
 				FLinearColor::Red, FLinearColor::Green, 5.0f);
 			if (b)
 			{
-				//distance = hitresult.Distance;
-				//hitpoint = hitresult.ImpactPoint;
-				//FName name = hitresult.Actor->GetFName();
-				////GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, name.ToString());
-				//////GEngine->AddOnScreenDebugMessage(-1, 35.0f, FColor::Yellow, FString::FromInt(distance).Append(" distance"));
-				//bhitbackground = name.IsEqual("background");
+				auto ft = hitresult.Actor->GetComponentByClass(UFlockAIMoveToComponent::StaticClass());
+				if (ft)
+				{
+					Owner->AddActorWorldOffset(-Owner->GetActorRightVector() * turnspeed);
+					isturning = true;
+					//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString("ssssssssssss"));
+				}
+				else
+				{
+					isturning = false;
+				}
+			}
+			else
+			{
+				isturning = false;
 			}
 		}
 //////////////////////////////////////////////////////////////////////////////
@@ -125,7 +146,7 @@ void UFlockAIMoveToComponent::TickComponent(float DeltaTime, ELevelTick TickType
 		//	FHitResult hitresult;
 		//	bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, Owner->GetActorForwardVector().Rotation(),
 		//		ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
-		//		EDrawDebugTrace::Type::ForOneFrame, hitresult, true,
+		//		EDrawDebugTrace::Type::None, hitresult, true,
 		//		FLinearColor::Red, FLinearColor::Green, 5.0f);
 		//	if (b)
 		//	{
@@ -139,6 +160,8 @@ void UFlockAIMoveToComponent::TickComponent(float DeltaTime, ELevelTick TickType
 		//}
 		//////////////////////////////////////////////////////////////////////////////
 		///////////up
+/////////////////////////////////////////////////////////////////////////////////////	
+		////////////up
 		{
 #define UPDIS 3
 			FVector starpoint = Owner->GetActorLocation();
@@ -149,16 +172,25 @@ void UFlockAIMoveToComponent::TickComponent(float DeltaTime, ELevelTick TickType
 			FHitResult hitresult;
 			bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, Owner->GetActorForwardVector().Rotation(),
 				ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
-				EDrawDebugTrace::Type::ForOneFrame, hitresult, true,
+				EDrawDebugTrace::Type::None, hitresult, true,
 				FLinearColor::Red, FLinearColor::Green, 5.0f);
 			if (b)
 			{
-				//distance = hitresult.Distance;
-				//hitpoint = hitresult.ImpactPoint;
-				//FName name = hitresult.Actor->GetFName();
-				////GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, name.ToString());
-				//////GEngine->AddOnScreenDebugMessage(-1, 35.0f, FColor::Yellow, FString::FromInt(distance).Append(" distance"));
-				//bhitbackground = name.IsEqual("background");
+				auto ft = hitresult.Actor->GetComponentByClass(UFlockAIMoveToComponent::StaticClass());
+				if (ft)
+				{
+					Owner->AddActorWorldOffset(-Owner->GetActorUpVector() * turnspeed* FMath::FRand());
+					isturning = true;
+					//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString("ssssssssssss"));
+				}
+				else
+				{
+					isturning = false;
+				}
+			}
+			else
+			{
+				isturning = false;
 			}
 		}
 	}
