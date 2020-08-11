@@ -23,12 +23,15 @@ void UFlockAIMoveToComponent::BeginPlay()
 	Super::BeginPlay();
 	Owner = GetOwner();
 	// ...
-	roatationspeed = 5;
 	FVector origin;
 	Owner->GetActorBounds(false, origin, ownerbound);
 	FVector origin1;
-	AILeader->GetActorBounds(false, origin1, aileaderbound);
-	keepdistance = ownerbound.Size() + aileaderbound.Size();
+	if (AILeader)
+	{
+		AILeader->GetActorBounds(false, origin1, aileaderbound);
+		keepdistance = ownerbound.Size() + aileaderbound.Size();
+	}
+
 }
 
 
@@ -41,158 +44,179 @@ void UFlockAIMoveToComponent::TickComponent(float DeltaTime, ELevelTick TickType
 		//UKismetMathLibrary::FindLookAtRotation(Owner->GetActorLocation(), AILeader->GetActorLocation());
 		
 		//UKismetMathLibrary::RLerp(Owner->GetActorRotation(), UKismetMathLibrary::FindLookAtRotation(Owner->GetActorLocation(), AILeader->GetActorLocation()),0.005f,true);
-		Owner->SetActorRotation(
-			UKismetMathLibrary::RLerp(
-				Owner->GetActorRotation(),
-				UKismetMathLibrary::FindLookAtRotation(Owner->GetActorLocation(),AILeader->GetActorLocation()), 
-				roatationspeed*0.005f, 
-				true
-			)
-		);
-		if (!isturning)
+		auto forwarddetected = [=]()
 		{
-			if (FVector::Dist(Owner->GetActorLocation(), AILeader->GetActorLocation()) > keepdistance)
-			{
-				Owner->SetActorLocation(UKismetMathLibrary::VLerp(Owner->GetActorLocation(), AILeader->GetActorLocation(), 0.001 * movespeed));
-			}
-		}
 
-		///// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//TArray<TEnumAsByte<EObjectTypeQuery>>otq;
-		////otq.Add(EObjectTypeQuery::ObjectTypeQuery2);
-		//otq.Add(EObjectTypeQuery::ObjectTypeQuery1);
-		//TArray<AActor*> actortoignore;
-		//actortoignore.Add(Owner);
-		//TArray<AActor*>outactors;
-		//UKismetSystemLibrary::SphereOverlapActors(this, Owner->GetActorLocation(), ownerbound.Size() *3, otq,AActor::StaticClass(), actortoignore, outactors);
-		//GEngine->AddOnScreenDebugMessage(-1, .7f, FColor::Red, FString::FromInt(outactors.Num()));
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		///forward
-		{
 #define FORWARDDIS 1.5
-			FVector starpoint = Owner->GetActorLocation();
-			FVector director = Owner->GetActorForwardVector();
-			FVector endpoint = starpoint + (ownerbound.X * FORWARDDIS * director);
-			FVector HalfSize = FVector(5, ownerbound.Y, ownerbound.Z);
-			TArray<AActor*> actorarray;
-			FHitResult hitresult;
-			bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, director.Rotation(),
-				ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
-				EDrawDebugTrace::Type::None, hitresult, true,
-				FLinearColor::Red, FLinearColor::Green, 5.0f);
-			if (b)
-			{
-				auto ft = hitresult.Actor->GetComponentByClass(UFlockAIMoveToComponent::StaticClass());
-				if (ft)
+				FVector starpoint = Owner->GetActorLocation();
+				FVector director = Owner->GetActorForwardVector();
+				FVector endpoint = starpoint + (ownerbound.X * FORWARDDIS * director);
+				FVector HalfSize = FVector(5, ownerbound.Y, ownerbound.Z);
+				TArray<AActor*> actorarray;
+				FHitResult hitresult;
+				bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, director.Rotation(),
+					ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
+					EDrawDebugTrace::Type::None, hitresult, true,
+					FLinearColor::Red, FLinearColor::Green, 5.0f);
+				if (b)
 				{
-					Owner->AddActorWorldOffset(FMath::VRand() * turnspeed);
-					isturning = true;
-					//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString("ssssssssssss"));
-				}
-				else
-				{
-					isturning = false;
-				}
-			}
-			else
-			{
-				isturning = false;
-			}
+					forwardactor = hitresult.Actor;
+					auto ft = forwardactor->GetComponentByClass(UFlockAIMoveToComponent::StaticClass());
+					if (ft)
+					{
+						movespeed = SLOWSPEED;
+						roatationspeed = SLOWROTATION;
 
-		}
+						forwardblockgoalrotation = Owner->GetTransform().TransformRotation(FRotator(0, FMath::RandRange(-20, 2), FMath::RandRange(-20, 2)).Quaternion()).Rotator();
+						b_fb = true;
+					}
 
-/////////////////////////////////////////////////////////////////////////////
-		////////////////right
-		{
+				}
+		};
+		auto rightdetected = [=]() {
+
 #define RIGHTDIS 3
 
-			FVector starpoint = Owner->GetActorLocation();
-			FVector director = Owner->GetActorRightVector();
-			FVector endpoint = starpoint + (ownerbound.Y * RIGHTDIS * director);
-			FVector HalfSize = FVector(ownerbound.X, 5, ownerbound.Z);
-			TArray<AActor*> actorarray;
-			FHitResult hitresult;
-			bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, Owner->GetActorForwardVector().Rotation(),
-				ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
-				EDrawDebugTrace::Type::None, hitresult, true,
-				FLinearColor::Red, FLinearColor::Green, 5.0f);
-			if (b)
-			{
-				auto ft = hitresult.Actor->GetComponentByClass(UFlockAIMoveToComponent::StaticClass());
-				if (ft)
+				FVector starpoint = Owner->GetActorLocation();
+				FVector director = Owner->GetActorRightVector();
+				FVector endpoint = starpoint + (ownerbound.Y * RIGHTDIS * director);
+				FVector HalfSize = FVector(ownerbound.X, 5, ownerbound.Z);
+				TArray<AActor*> actorarray;
+				FHitResult hitresult;
+				bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, Owner->GetActorForwardVector().Rotation(),
+					ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
+					EDrawDebugTrace::Type::None, hitresult, true,
+					FLinearColor::Red, FLinearColor::Green, 5.0f);
+				if (b)
 				{
-					Owner->AddActorWorldOffset(-Owner->GetActorRightVector() * turnspeed);
-					isturning = true;
-					//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString("ssssssssssss"));
+					rightactor = hitresult.Actor;
+					auto ft = rightactor->GetComponentByClass(UFlockAIMoveToComponent::StaticClass());
+					if (ft)
+					{
+						movespeed = SLOWSPEED;
+						roatationspeed = SLOWROTATION;
+						b_rb = true;
+					}
+
 				}
-				else
-				{
-					isturning = false;
-				}
-			}
-			else
+		};
+		auto updetected = [=]() {
 			{
-				isturning = false;
-			}
-		}
-//////////////////////////////////////////////////////////////////////////////
-		///////////left
-		//{
-		//	FVector starpoint = Owner->GetActorLocation();
-		//	FVector director = -Owner->GetActorRightVector();
-		//	FVector endpoint = starpoint + (ownerbound.Y * 1.5 * director);
-		//	FVector HalfSize = FVector(ownerbound.X, 5, ownerbound.Z);
-		//	TArray<AActor*> actorarray;
-		//	FHitResult hitresult;
-		//	bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, Owner->GetActorForwardVector().Rotation(),
-		//		ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
-		//		EDrawDebugTrace::Type::None, hitresult, true,
-		//		FLinearColor::Red, FLinearColor::Green, 5.0f);
-		//	if (b)
-		//	{
-		//		//distance = hitresult.Distance;
-		//		//hitpoint = hitresult.ImpactPoint;
-		//		//FName name = hitresult.Actor->GetFName();
-		//		////GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, name.ToString());
-		//		//////GEngine->AddOnScreenDebugMessage(-1, 35.0f, FColor::Yellow, FString::FromInt(distance).Append(" distance"));
-		//		//bhitbackground = name.IsEqual("background");
-		//	}
-		//}
-		//////////////////////////////////////////////////////////////////////////////
-		///////////up
-/////////////////////////////////////////////////////////////////////////////////////	
-		////////////up
-		{
+				/////////////////////////////////////////////////////////////////////////////////////	
+			////////////up
 #define UPDIS 3
-			FVector starpoint = Owner->GetActorLocation();
-			FVector director = Owner->GetActorUpVector();
-			FVector endpoint = starpoint + (ownerbound.Y * UPDIS * director);
-			FVector HalfSize = FVector(ownerbound.X, ownerbound.Y, 5);
-			TArray<AActor*> actorarray;
-			FHitResult hitresult;
-			bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, Owner->GetActorForwardVector().Rotation(),
-				ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
-				EDrawDebugTrace::Type::None, hitresult, true,
-				FLinearColor::Red, FLinearColor::Green, 5.0f);
-			if (b)
+				FVector starpoint = Owner->GetActorLocation();
+				FVector director = Owner->GetActorUpVector();
+				FVector endpoint = starpoint + (ownerbound.Y * UPDIS * director);
+				FVector HalfSize = FVector(ownerbound.X, ownerbound.Y, 5);
+				TArray<AActor*> actorarray;
+				FHitResult hitresult;
+				bool b = UKismetSystemLibrary::BoxTraceSingle(this, starpoint, endpoint, HalfSize, Owner->GetActorForwardVector().Rotation(),
+					ETraceTypeQuery::TraceTypeQuery2, true, actorarray,
+					EDrawDebugTrace::Type::None, hitresult, true,
+					FLinearColor::Red, FLinearColor::Green, 5.0f);
+				if (b)
+				{
+					upactor = hitresult.Actor;
+					auto ft = upactor->GetComponentByClass(UFlockAIMoveToComponent::StaticClass());
+					if (ft)
+					{
+						movespeed = SLOWSPEED;
+						roatationspeed = SLOWROTATION;
+						b_ub = true;
+					}
+				}
+			}
+		};
+		forwarddetected();
+		rightdetected();
+		updetected();
+		if (b_fb)
+		{
+			FRotator currentrotation = Owner->GetActorRotation();
+			if ((currentrotation - forwardblockgoalrotation).IsNearlyZero(1.5))
 			{
-				auto ft = hitresult.Actor->GetComponentByClass(UFlockAIMoveToComponent::StaticClass());
-				if (ft)
-				{
-					Owner->AddActorWorldOffset(-Owner->GetActorUpVector() * turnspeed* FMath::FRand());
-					isturning = true;
-					//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, FString("ssssssssssss"));
-				}
-				else
-				{
-					isturning = false;
-				}
+				b_fb = false;
 			}
 			else
 			{
-				isturning = false;
+				Owner->SetActorRotation(
+					UKismetMathLibrary::RLerp(
+						currentrotation,
+						forwardblockgoalrotation,
+						roatationspeed * 0.005f,
+						true
+					)
+				);
 			}
+			movespeed = SLOWSPEED;
+			roatationspeed = SLOWROTATION;
 		}
+
+
+		switch (state)
+		{
+		case AIMoveStatus::normal:
+
+			Owner->SetActorRotation(
+				UKismetMathLibrary::RLerp(
+					Owner->GetActorRotation(),
+					UKismetMathLibrary::FindLookAtRotation(Owner->GetActorLocation(), AILeader->GetActorLocation()),
+					roatationspeed * 0.005f,
+					true
+				)
+			);
+			if (b_fb || b_rb || b_ub)
+			{
+				state = AIMoveStatus::avoid;
+			}
+			break;
+		case AIMoveStatus::avoid:
+			if (b_rb)
+			{
+				Owner->AddActorWorldOffset(-Owner->GetActorRightVector() * turnspeed * FMath::FRand());
+				movespeed = FMath::RandRange(SLOWSPEED, SLOWSPEED + 1);
+				if (rightmovecounter++ > 5)
+				{
+					b_rb = false;
+					rightmovecounter = 0;
+				}
+	
+			}
+			if (b_ub)
+			{
+				Owner->AddActorWorldOffset(-Owner->GetActorUpVector() * turnspeed * FMath::FRand());
+				movespeed = FMath::RandRange(SLOWSPEED, SLOWSPEED + 1);
+				if (rightmovecounter++ > 5)
+				{
+					b_ub = false;
+
+					upmovecounter = 0;
+				}
+			}
+			if (b_fb || b_rb || b_ub)
+			{		
+			}
+			else
+			{
+				movespeed = NORMALSPEED;
+				roatationspeed = NORMALROTATION;
+				state = AIMoveStatus::normal;
+			}
+
+			break;
+		default:
+			break;
+		}
+		if (FVector::Dist(Owner->GetActorLocation(), AILeader->GetActorLocation()) > keepdistance)
+		{
+			Owner->AddActorWorldOffset(Owner->GetActorForwardVector() * movespeed);
+		}
+		else
+		{
+
+		}
+
 	}
 	// ...
 }
