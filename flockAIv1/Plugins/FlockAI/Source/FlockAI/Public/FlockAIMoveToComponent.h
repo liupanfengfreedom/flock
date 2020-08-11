@@ -17,14 +17,15 @@ class FLOCKAI_API UFlockAIMoveToComponent : public UActorComponent
 {
 	GENERATED_BODY()
 	AActor* Owner;
-#define FASTROTATION 4.1f
-#define NORMALROTATION 2.1f
-#define SLOWROTATION 1.2f
+#define mlti 2
+#define FASTROTATION (4.1f*mlti)
+#define NORMALROTATION (2.1f*mlti)
+#define SLOWROTATION (1.2f*mlti)
 	int roatationspeed = NORMALROTATION;
 	float keepdistance;
-#define FASTSPEED 3.3f
-#define NORMALSPEED 2.1f
-#define SLOWSPEED 1.2f
+#define FASTSPEED (3.3f*mlti)
+#define NORMALSPEED (2.1f*mlti)
+#define SLOWSPEED (1.2f*mlti)
 	float movespeed= NORMALSPEED;
 	FVector ownerbound;
 	FVector aileaderbound;
@@ -43,7 +44,9 @@ class FLOCKAI_API UFlockAIMoveToComponent : public UActorComponent
 	FVector upactorbound;
 	TWeakObjectPtr<class AActor>  upactor;
 	int upmovecounter=0;
-
+	//void threadwork();
+	FTimerHandle th;
+	void timerwork();
 public:	
 	// Sets default values for this component's properties
 	UFlockAIMoveToComponent();
@@ -58,14 +61,14 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	UFUNCTION(BlueprintCallable)
-	int getstate()
-	{
-		return (int)(state);
-	}
-	UFUNCTION(BlueprintCallable)
-		float getmovespeed()
-	{
-		return movespeed;
-	}
+	//UFUNCTION(BlueprintCallable)
+	//int getstate()
+	//{
+	//	return (int)(state);
+	//}
+	//UFUNCTION(BlueprintCallable)
+	//	float getmovespeed()
+	//{
+	//	return movespeed;
+	//}
 };
