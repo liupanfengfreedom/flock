@@ -22,7 +22,7 @@ class FLOCKAI_API UFlockAIMoveToComponent : public UActorComponent
 #define SLOWROTATION 1.2f
 	int roatationspeed = NORMALROTATION;
 	float keepdistance;
-#define FASTSPEED 2.3f
+#define FASTSPEED 3.3f
 #define NORMALSPEED 2.1f
 #define SLOWSPEED 1.2f
 	float movespeed= NORMALSPEED;

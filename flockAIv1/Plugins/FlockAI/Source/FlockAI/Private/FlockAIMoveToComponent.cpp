@@ -6,6 +6,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Engine.h"
+#include "FlockAIEnemyComponent.h"
+
 // Sets default values for this component's properties
 UFlockAIMoveToComponent::UFlockAIMoveToComponent()
 {
@@ -62,12 +64,21 @@ void UFlockAIMoveToComponent::TickComponent(float DeltaTime, ELevelTick TickType
 				{
 					forwardactor = hitresult.Actor;
 					auto ft = forwardactor->GetComponentByClass(UFlockAIMoveToComponent::StaticClass());
+					auto ft1 = forwardactor->GetComponentByClass(UFlockAIEnemyComponent::StaticClass());
 					if (ft)
 					{
 						movespeed = SLOWSPEED;
 						roatationspeed = SLOWROTATION;
 
 						forwardblockgoalrotation = Owner->GetTransform().TransformRotation(FRotator(0, FMath::RandRange(-20, 2), FMath::RandRange(-20, 2)).Quaternion()).Rotator();
+						b_fb = true;
+					}
+					else if (ft1)
+					{
+						movespeed = FASTSPEED;
+						roatationspeed = FASTROTATION;
+
+						forwardblockgoalrotation = Owner->GetTransform().TransformRotation(FRotator(0, FMath::RandRange(-90, -30), FMath::RandRange(-90, -30)).Quaternion()).Rotator();
 						b_fb = true;
 					}
 
