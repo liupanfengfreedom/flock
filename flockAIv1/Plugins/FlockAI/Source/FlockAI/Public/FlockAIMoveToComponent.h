@@ -11,13 +11,14 @@ enum AIMoveStatus
 {
 	normal,
     avoid,
+	idle,
 };
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FLOCKAI_API UFlockAIMoveToComponent : public UActorComponent
 {
 	GENERATED_BODY()
 	AActor* Owner;
-#define mlti 2
+#define mlti 1
 #define FASTROTATION (4.1f*mlti)
 #define NORMALROTATION (2.1f*mlti)
 #define SLOWROTATION (1.2f*mlti)
@@ -32,6 +33,8 @@ class FLOCKAI_API UFlockAIMoveToComponent : public UActorComponent
 	float turnspeed=1;
 	AIMoveStatus state = AIMoveStatus::normal;
 	FRotator forwardblockgoalrotation;
+	FRotator idlerotation;
+	int idlerotationcounter=0;
 	bool b_fb = false;
 	bool b_rb = false;
 	bool b_ub = false;
@@ -47,6 +50,12 @@ class FLOCKAI_API UFlockAIMoveToComponent : public UActorComponent
 	//void threadwork();
 	FTimerHandle th;
 	void timerwork();
+	FTimerHandle thf;
+	void timerworkf();
+	FTimerHandle thr;
+	void timerworkr();
+	FTimerHandle thu;
+	void timerworku();
 public:	
 	// Sets default values for this component's properties
 	UFlockAIMoveToComponent();
