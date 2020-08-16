@@ -726,7 +726,8 @@ void UFlockAIMoveToComponent::TickComponent(float DeltaTime, ELevelTick TickType
 					true
 				)
 			);
-			if (idlerotationcounter++ > 50)
+			Owner->AddActorWorldOffset(Owner->GetActorForwardVector() * movespeed);
+			if (idlerotationcounter++ > 5)
 			{
 				idlerotationcounter = 0;
 				movespeed = NORMALSPEED;
@@ -737,17 +738,17 @@ void UFlockAIMoveToComponent::TickComponent(float DeltaTime, ELevelTick TickType
 		default:
 			break;
 		}
-		if (state == AIMoveStatus::idle||FVector::Dist(Owner->GetActorLocation(), AILeader->GetActorLocation()) > keepdistance)
+		//if (state == AIMoveStatus::idle||FVector::Dist(Owner->GetActorLocation(), AILeader->GetActorLocation()) > keepdistance)
 		{
 			Owner->AddActorWorldOffset(Owner->GetActorForwardVector() * movespeed);
 		}
-		else
-		{
-			movespeed = SLOWSPEED;
-			roatationspeed = SLOWROTATION;
-			state = AIMoveStatus::idle;
-			idlerotation = Owner->GetTransform().TransformRotation(FRotator(0, FMath::RandRange(-10, -2), FMath::RandRange(5, 10)).Quaternion()).Rotator();
-		}
+		//else
+		//{
+		//	movespeed = SLOWSPEED;
+		//	roatationspeed = SLOWROTATION;
+		//	state = AIMoveStatus::idle;
+		//	idlerotation = Owner->GetTransform().TransformRotation(FRotator(0, FMath::RandRange(-10, -2), FMath::RandRange(5, 10)).Quaternion()).Rotator();
+		//}
 
 	}
 	// ...
